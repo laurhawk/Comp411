@@ -1,0 +1,146 @@
+# Starter file for ex1.asm
+
+.data 0x0
+	#...
+   n: .space 100
+   k: .space 100
+   result: .space 100
+   newline: .asciiz "\n"
+      
+.text 0x3000
+
+.globl main
+main:
+
+ #   ori     $sp, $0, 0x3000     # Initialize stack pointer to the top word below .text
+                                # The first value on stack will actually go at 0x2ffc
+                                #   because $sp is decremented first.
+ #   addi    $fp, $sp, -4        # Set $fp to the start of main's stack frame
+
+
+
+    # =============================================================
+    # No need to create room for temporaries to be protected.
+    # =============================================================
+ #while n!=0 and k!=0
+     				# Read the n; n is at $t0 or $16
+  addi	$v0, $0, 5			# system call 5 is for reading an integer
+  syscall 				# integer value read is in $v0
+  move	$t0, $v0			# copy the width into $16
+  beqz $v0, end        
+  
+   				# Read the k; k is at $t1 or $17
+  addi	$v0, $0, 5			# system call 5 is for reading an integer
+  syscall 				# integer value read is in $v0
+  
+  move $a0, $t0
+  move $a1, $v0
+  #beqz $9, end
+  jal NchooseK
+  
+  move $t0, $v0
+  				#Print nchoosek
+  move $a0, $t0			#moves from $t0 to $t0
+  addi $v0, $0, 1		#system call 1 is for printing an integer
+  syscall			#print the integer
+  
+  addi $v0, $0, 4  		# system call 4 is for printing a string
+  la $a0, newline 		# address of areaIs string is in $a0
+  syscall           		# print the string
+  j main
+  j end
+
+ end: 
+  ori     $v0, $0, 10    	# System call code 10 for exit
+  syscall                 	# Exit the program
+  
+
+    # ... MORE CODE FOR main HERE
+    # ...
+    # ...
+    # END OF BODY OF main
+    # =============================================================
+
+
+
+#exit_from_main:
+#    ori     $v0, $0, 10     # System call code 10 for exit
+#    syscall                 # Exit the program
+    
+#end_of_main:
+  				#Print nchoosek
+#  move $a0, $t0			#moves from $t0 to $t0
+#  addi $v0, $0, 1		#system call 1 is for printing an integer
+#  syscall			#print the integer
+ # j end 
+
+#end: 
+#	ori   $v0, $0, 10     # system call 10 for exit
+#	syscall               # we are out of here.
+
+
+
+NchooseK:    		# PLEASE DO NOT CHANGE THE NAME "NchooseK"
+	#----------------------------------------------------------------#
+	# $a0 has the number n, $a1 has k, from which to compute n choose k
+	#
+	# Write code here to implement the function you wrote in C.
+	# Your implementation MUST be recursive; an iterative
+	# implementation is not acceptable.
+	#
+	# $v0 should have the NchooseK result to be returned to main.
+	#----------------------------------------------------------------#
+
+	#...
+	#...
+	 slt $t0, $a0, $a1         # if n < k, then set t0 to 1
+         bne $t0, $zero, END1      # if t0 != 0, branch to end1
+         beq $a0, $a1, END2        # if n == k, branch to end2
+         beq $a1, $zero, END2      # if n == 0, branch to end2
+
+         sw $fp, -4($sp)		
+         addi $fp, $sp, 0
+         addi $sp, $sp, -12
+         sw $ra, 4 ($sp)
+         sw $a0, 0 ($sp)
+         addi $sp, $sp, -4
+         sw $t1, ($sp)
+         addi $a0, $a0, -1
+         jal NchooseK		#jump back to top of method for recursion
+
+         move $t1, $v0		#move contents of t1 into v0 
+         addi $sp, $sp, -4
+         sw $a1, ($sp)
+         addi $sp, $sp, -4
+         sw $ra, ($sp) 
+
+         addi $a1, $a1, -1	#increment a1
+
+         jal NchooseK		#jump back to top of method for recursion
+
+         add $v0, $t1, $v0
+
+         lw $ra, ($sp)
+         addi $sp, $sp, 4
+
+         lw $a1, ($sp)
+         addi $sp, $sp, 4
+
+         lw $t1, ($sp)
+         addi $sp, $sp, 4
+
+         lw $a0, ($sp)
+         addi $sp, $sp, 4
+         lw $ra, ($sp)
+         addi $sp, $sp, 4
+         lw $fp, ($sp)
+         addi $sp, $sp, 4
+         
+	 j complete
+	
+END1:   move    $v0, $zero         
+        j complete
+
+END2:   addi $v0, $zero, 1
+
+complete: jr $ra
